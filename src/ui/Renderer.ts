@@ -1,6 +1,8 @@
 import { Layout } from './Layout.js';
 import { Game } from '../game/Game.js';
 import { TileType } from '../world/Tile.js';
+import { GameMode } from '../game/GameState.js';
+import { Item } from '../entities/Item.js';
 
 export class Renderer {
   private layout: Layout;
@@ -12,6 +14,17 @@ export class Renderer {
   }
 
   public render(): void {
+    if (this.game.mode === GameMode.Inventory) {
+       this.renderInventory();
+       return;
+    }
+    
+    if (this.game.mode === GameMode.GameOver) {
+        this.layout.mapBox.setContent('{center}{red-fg}GAME OVER{/red-fg}\n\nPress ENTER to restart{/center}');
+        this.layout.render();
+        return;
+    }
+
     if (!this.game.map || !this.game.player) {
        this.renderPlaceholder();
        return;
@@ -23,7 +36,6 @@ export class Renderer {
     for (let y = 0; y < map.height; y++) {
       let line = '';
       for (let x = 0; x < map.width; x++) {
-        // Check entities first (on top)
         const entity = this.game.entities.find(e => e.x === x && e.y === y);
         const player = this.game.player.x === x && this.game.player.y === y ? this.game.player : null;
         
@@ -58,6 +70,31 @@ Depth: ${this.game.depth}`;
     this.layout.sidebarBox.setContent(stats);
     
     this.layout.render();
+  }
+  
+  private renderInventory(): void {
+     const p = this.game.player;
+     if (!p) return;
+     
+     let content = '{center}{bold}Inventory{/bold}{/center}\n\n';
+     if (p.inventory.length === 0) {
+        content += 'Your inventory is empty.';
+     } else {
+        p.inventory.forEach((item: Item, index: number) => {
+           if (index === this.game.inventoryIndex) {
+              content += `{blue-fg}> ${item.name}{/}\n`;
+           } else {
+              content += `  ${item.name}\n`;
+           }
+        });
+     }
+     
+     content += '\n\n{bold}Equipment:{/bold}\n';
+     content += `Weapon: ${p.equipment.weapon ? p.equipment.weapon.name : 'None'}\n`;
+     content += `Armor: ${p.equipment.armor ? p.equipment.armor.name : 'None'}\n`;
+     
+     this.layout.mapBox.setContent(content);
+     this.layout.render();
   }
   
   public renderPlaceholder(): void {

@@ -2,6 +2,7 @@ import { DungeonMap } from './Map.js';
 import { Tile, TileType } from './Tile.js';
 import { Monster, MonsterType } from '../entities/Monster.js';
 import { Entity } from '../entities/Entity.js';
+import { Item, ItemType } from '../entities/Item.js';
 
 interface Room {
   x: number;
@@ -70,23 +71,42 @@ export class LevelGenerator {
     const startX = Math.floor(firstRoom.x + firstRoom.w / 2);
     const startY = Math.floor(firstRoom.y + firstRoom.h / 2);
 
-    // Generate Entities (Monsters)
+    // Generate Entities
     const entities: Entity[] = [];
     
     // Skip the first room (spawn room)
     for (let i = 1; i < rooms.length; i++) {
         const room = rooms[i];
-        // 50% chance to spawn a monster in a room
+        // Monster
         if (Math.random() < 0.5) {
            const mx = Math.floor(room.x + room.w / 2);
            const my = Math.floor(room.y + room.h / 2);
            
-           // Determine monster type based on depth
            let type = MonsterType.Goblin;
            if (depth > 2 && Math.random() < 0.4) type = MonsterType.Orc;
            if (depth > 5 && Math.random() < 0.2) type = MonsterType.Troll;
            
            entities.push(new Monster(mx, my, type));
+        }
+
+        // Item
+        if (Math.random() < 0.3) {
+           const ix = Math.floor(room.x + room.w / 2) + (Math.random() > 0.5 ? 1 : -1);
+           const iy = Math.floor(room.y + room.h / 2) + (Math.random() > 0.5 ? 1 : -1);
+           
+           // Simple collision check avoid placing in wall
+           if (map.isWalkable(ix, iy)) { 
+               let item: Item;
+               const rand = Math.random();
+               if (rand < 0.5) {
+                   item = new Item(ix, iy, ItemType.Potion, 'Health Potion', '!', 'red', {}, 5);
+               } else if (rand < 0.8) {
+                   item = new Item(ix, iy, ItemType.Weapon, 'Iron Sword', '/', 'cyan', { attack: 2 });
+               } else {
+                   item = new Item(ix, iy, ItemType.Armor, 'Leather Armor', '[', 'brown', { defense: 1 });
+               }
+               entities.push(item);
+           }
         }
     }
 
