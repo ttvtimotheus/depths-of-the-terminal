@@ -1,16 +1,75 @@
 import { Layout } from './Layout.js';
+import { Game } from '../game/Game.js';
+import { TileType } from '../world/Tile.js';
 
 export class Renderer {
   private layout: Layout;
+  private game: Game;
 
-  constructor(layout: Layout) {
+  constructor(layout: Layout, game: Game) {
     this.layout = layout;
+    this.game = game;
   }
 
+  public render(): void {
+    if (!this.game.map || !this.game.player) {
+       this.renderPlaceholder();
+       return;
+    }
+
+    const lines: string[] = [];
+    const map = this.game.map;
+    
+    for (let y = 0; y < map.height; y++) {
+      let line = '';
+      for (let x = 0; x < map.width; x++) {
+        // Check entities first (on top)
+        const entity = this.game.entities.find(e => e.x === x && e.y === y);
+        const player = this.game.player.x === x && this.game.player.y === y ? this.game.player : null;
+        
+        if (player) {
+          line += `{${player.color}-fg}${player.char}{/}`;
+        } else if (entity) {
+          line += `{${entity.color}-fg}${entity.char}{/}`;
+        } else {
+           const tile = map.getTile(x, y);
+           if (tile) {
+             line += tile.char;
+           } else {
+             line += ' ';
+           }
+        }
+      }
+      lines.push(line);
+    }
+    
+    this.layout.mapBox.setContent(lines.join('\n'));
+    
+    const p = this.game.player;
+    const stats = `Name: ${p.name}
+Level: ${p.level}
+HP: ${p.stats.hp}/${p.stats.maxHp}
+ATK: ${p.stats.attack}
+DEF: ${p.stats.defense}
+XP: ${p.experience}
+
+Depth: ${this.game.depth}`;
+
+    this.layout.sidebarBox.setContent(stats);
+    
+    this.layout.render();
+  }
+  
   public renderPlaceholder(): void {
     this.layout.mapBox.setContent('{center}Map Area Placeholder{/center}');
     this.layout.sidebarBox.setContent('Player: Hero\nHP: 10/10');
     this.layout.logBox.setContent('Welcome to Depths of the Terminal!');
     this.layout.render();
+  }
+  
+  public addLog(msg: string): void {
+      this.layout.logBox.pushLine(msg);
+      this.layout.logBox.setScrollPerc(100);
+      this.layout.render();
   }
 }
