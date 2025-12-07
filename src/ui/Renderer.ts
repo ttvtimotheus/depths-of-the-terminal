@@ -3,6 +3,7 @@ import { Game } from '../game/Game.js';
 import { TileType } from '../world/Tile.js';
 import { GameMode } from '../game/GameState.js';
 import { Item } from '../entities/Item.js';
+import { Entity } from '../entities/Entity.js';
 
 export class Renderer {
   private layout: Layout;
@@ -15,8 +16,13 @@ export class Renderer {
 
   public render(): void {
     if (this.game.mode === GameMode.Inventory) {
+       this.layout.inventoryList.show();
+       this.layout.inventoryList.focus();
        this.renderInventory();
+       this.layout.render();
        return;
+    } else {
+       this.layout.inventoryList.hide();
     }
     
     if (this.game.mode === GameMode.GameOver) {
@@ -44,7 +50,7 @@ export class Renderer {
 
         if (tile.visible) {
             // Render entities only if visible
-            const entity = this.game.entities.find(e => e.x === x && e.y === y);
+            const entity = this.game.entities.find((e: Entity) => e.x === x && e.y === y);
             const player = this.game.player.x === x && this.game.player.y === y ? this.game.player : null;
             
             if (player) {
@@ -85,25 +91,19 @@ Depth: ${this.game.depth}`;
      const p = this.game.player;
      if (!p) return;
      
-     let content = '{center}{bold}Inventory{/bold}{/center}\n\n';
-     if (p.inventory.length === 0) {
-        content += 'Your inventory is empty.';
+     const items = p.inventory.map((item: Item) => item.name);
+     
+     if (items.length === 0) {
+         this.layout.inventoryList.setItems(['(Empty)']);
      } else {
-        p.inventory.forEach((item: Item, index: number) => {
-           if (index === this.game.inventoryIndex) {
-              content += `{blue-fg}> ${item.name}{/}\n`;
-           } else {
-              content += `  ${item.name}\n`;
-           }
-        });
+         this.layout.inventoryList.setItems(items);
+         this.layout.inventoryList.select(this.game.inventoryIndex);
      }
      
-     content += '\n\n{bold}Equipment:{/bold}\n';
-     content += `Weapon: ${p.equipment.weapon ? p.equipment.weapon.name : 'None'}\n`;
-     content += `Armor: ${p.equipment.armor ? p.equipment.armor.name : 'None'}\n`;
-     
-     this.layout.mapBox.setContent(content);
-     this.layout.render();
+     // Update label to show equipment
+     const weapon = p.equipment.weapon ? p.equipment.weapon.name : 'None';
+     const armor = p.equipment.armor ? p.equipment.armor.name : 'None';
+     this.layout.inventoryList.setLabel(` Inventory (W: ${weapon}, A: ${armor}) `);
   }
   
   public renderPlaceholder(): void {

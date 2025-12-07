@@ -23,6 +23,6 @@ export class InputHandler {
     this.screen.key(['i'], () => callback({ type: 'inventory' }));
     this.screen.key(['enter'], () => callback({ type: 'use' }));
     
-    this.screen.key(['escape', 'q'], () => callback({ type: 'quit' })); // Map quit to cancel in Game logic if needed
+    this.screen.key(['escape', 'q', 'C-c'], () => callback({ type: 'quit' })); // Map quit to cancel in Game logic if needed
   }
 }

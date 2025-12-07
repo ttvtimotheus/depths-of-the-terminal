@@ -17,4 +17,8 @@ export const GameConfigSchema = z.object({
 
 export type GameConfigType = z.infer<typeof GameConfigSchema>;
 
-export const GameConfig: GameConfigType = GameConfigSchema.parse({});
+export const GameConfig: GameConfigType = GameConfigSchema.parse({
+  map: {},
+  fov: {},
+  player: {}
+});

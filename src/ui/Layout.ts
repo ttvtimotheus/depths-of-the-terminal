@@ -20,7 +20,8 @@ export class Layout {
       height: '80%',
       label: ' Dungeon ',
       border: { type: 'line' },
-      style: { border: { fg: 'white' } }
+      style: { border: { fg: 'white' } },
+      tags: true
     });
 
     // Sidebar: Top-Right
@@ -31,7 +32,8 @@ export class Layout {
       height: '80%',
       label: ' Stats ',
       border: { type: 'line' },
-      style: { border: { fg: 'yellow' } }
+      style: { border: { fg: 'yellow' } },
+      tags: true
     });
 
     // Log: Bottom
@@ -52,11 +54,27 @@ export class Layout {
     this.screen.append(this.sidebarBox);
     this.screen.append(this.logBox);
 
-    // Quit on Escape, q, or C-c
-    this.screen.key(['escape', 'q', 'C-c'], () => {
-      return process.exit(0);
+    // Inventory List (hidden by default)
+    this.inventoryList = blessed.list({
+      parent: this.screen,
+      top: 'center',
+      left: 'center',
+      width: '50%',
+      height: '50%',
+      label: ' Inventory ',
+      border: { type: 'line' },
+      style: {
+        border: { fg: 'cyan' },
+        selected: { bg: 'blue', fg: 'white' }
+      },
+      keys: true,
+      vi: true,
+      hidden: true,
+      tags: true
     });
   }
+
+  public inventoryList: blessed.Widgets.ListElement;
 
   public render(): void {
     this.screen.render();

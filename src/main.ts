@@ -16,10 +16,6 @@ const main = () => {
   renderer.render();
   
   inputHandler.listen((cmd) => {
-    if (cmd.type === 'quit') {
-      process.exit(0);
-    }
-    
     game.handleInput(cmd);
     renderer.render();
   });
