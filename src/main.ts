@@ -9,6 +9,8 @@ const main = () => {
   const renderer = new Renderer(layout, game);
   const inputHandler = new InputHandler(layout.screen);
   
+  game.onLog = (msg) => renderer.addLog(msg);
+  
   // Start the game immediately for MVP
   game.startNewGame();
   renderer.render();

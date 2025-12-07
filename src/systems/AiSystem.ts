@@ -1,9 +1,10 @@
 import { Player } from '../entities/Player.js';
 import { Entity, EntityType } from '../entities/Entity.js';
 import { DungeonMap } from '../world/Map.js';
+import { CombatSystem } from './CombatSystem.js';
 
 export class AiSystem {
-  public process(player: Player, entities: Entity[], map: DungeonMap): void {
+  public process(player: Player, entities: Entity[], map: DungeonMap, log: (msg: string) => void): void {
     for (const entity of entities) {
       if (entity.type === EntityType.Monster) {
         const dx = player.x - entity.x;
@@ -15,6 +16,8 @@ export class AiSystem {
           const stepY = Math.sign(dy);
 
           if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
+             const msg = CombatSystem.resolveAttack(entity, player);
+             log(msg);
              continue; 
           }
 

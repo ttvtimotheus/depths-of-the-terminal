@@ -5,6 +5,7 @@ import { Entity } from '../entities/Entity.js';
 import { LevelGenerator } from '../world/LevelGenerator.js';
 import { InputCommand } from '../input/InputHandler.js';
 import { AiSystem } from '../systems/AiSystem.js';
+import { CombatSystem } from '../systems/CombatSystem.js';
 
 export class Game {
   public map: DungeonMap | null = null;
@@ -13,6 +14,8 @@ export class Game {
   public mode: GameMode = GameMode.MainMenu;
   public depth: number = 1;
   public turn: number = 0;
+  public onLog: ((msg: string) => void) | null = null;
+  
   private aiSystem: AiSystem;
 
   constructor() {
@@ -28,6 +31,8 @@ export class Game {
     this.map = map;
     this.player = new Player(startX, startY);
     this.entities = entities;
+    
+    this.log('Welcome to the Depths of the Terminal!');
   }
   
   public handleInput(cmd: InputCommand): void {
@@ -40,6 +45,10 @@ export class Game {
      }
   }
   
+  public log(msg: string): void {
+    if (this.onLog) this.onLog(msg);
+  }
+  
   private movePlayer(dx: number, dy: number): void {
      if (!this.player || !this.map) return;
      
@@ -47,22 +56,33 @@ export class Game {
      const newY = this.player.y + dy;
      
      if (this.map.isWalkable(newX, newY)) {
-        // Check for entity collision (attack)
         const target = this.entities.find(e => e.x === newX && e.y === newY);
         if (target) {
-           // Attack logic will go here
-           // console.log('Attack!');
+           const msg = CombatSystem.resolveAttack(this.player, target);
+           this.log(msg);
+           
+           if (target.stats.hp <= 0) {
+              this.log(`${target.name} dies!`);
+              this.entities = this.entities.filter(e => e !== target);
+              this.player.experience += 10;
+           }
+           this.processTurn(); // Attack takes a turn
         } else {
            this.player.x = newX;
            this.player.y = newY;
+           this.processTurn();
         }
-        this.processTurn();
      }
   }
   
   private processTurn(): void {
      if (this.player && this.map) {
-         this.aiSystem.process(this.player, this.entities, this.map);
+         this.aiSystem.process(this.player, this.entities, this.map, (msg) => this.log(msg));
+         
+         if (this.player.stats.hp <= 0) {
+             this.log('You have died!');
+             this.mode = GameMode.GameOver;
+         }
      }
      this.turn++;
   }
