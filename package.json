@@ -13,6 +13,12 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "pkg": {
+    "scripts": [
+      "node_modules/neo-blessed/lib/widgets/*.js"
+    ],
+    "assets": []
+  },
   "dependencies": {
     "neo-blessed": "^0.2.0",
     "uuid": "^13.0.0",
@@ -22,6 +28,7 @@
     "@types/blessed": "^0.1.27",
     "@types/node": "^24.10.1",
     "@types/uuid": "^10.0.0",
+    "pkg": "^5.8.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
