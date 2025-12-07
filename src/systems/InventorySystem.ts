@@ -27,7 +27,7 @@ export class InventorySystem {
        const idx = player.inventory.indexOf(item);
        if (idx > -1) player.inventory.splice(idx, 1);
        
-       InventorySystem.recalculateStats(player);
+       player.updateStats();
        
        return `You equip ${item.name}.`;
     } else if (item.itemType === ItemType.Armor) {
@@ -38,14 +38,9 @@ export class InventorySystem {
        const idx = player.inventory.indexOf(item);
        if (idx > -1) player.inventory.splice(idx, 1);
        
-       InventorySystem.recalculateStats(player);
+       player.updateStats();
        return `You equip ${item.name}.`;
     }
     return 'You cannot use this item.';
-  }
-  
-  public static recalculateStats(player: Player): void {
-     player.stats.attack = player.baseStats.attack + (player.equipment.weapon?.bonus.attack || 0);
-     player.stats.defense = player.baseStats.defense + (player.equipment.armor?.bonus.defense || 0);
   }
 }

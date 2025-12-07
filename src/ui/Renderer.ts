@@ -36,20 +36,29 @@ export class Renderer {
     for (let y = 0; y < map.height; y++) {
       let line = '';
       for (let x = 0; x < map.width; x++) {
-        const entity = this.game.entities.find(e => e.x === x && e.y === y);
-        const player = this.game.player.x === x && this.game.player.y === y ? this.game.player : null;
-        
-        if (player) {
-          line += `{${player.color}-fg}${player.char}{/}`;
-        } else if (entity) {
-          line += `{${entity.color}-fg}${entity.char}{/}`;
+        const tile = map.getTile(x, y);
+        if (!tile) {
+            line += ' ';
+            continue;
+        }
+
+        if (tile.visible) {
+            // Render entities only if visible
+            const entity = this.game.entities.find(e => e.x === x && e.y === y);
+            const player = this.game.player.x === x && this.game.player.y === y ? this.game.player : null;
+            
+            if (player) {
+              line += `{${player.color}-fg}${player.char}{/}`;
+            } else if (entity) {
+              line += `{${entity.color}-fg}${entity.char}{/}`;
+            } else {
+               line += tile.char;
+            }
+        } else if (tile.seen) {
+            // Render remembered map as gray
+            line += `{grey-fg}${tile.char}{/}`;
         } else {
-           const tile = map.getTile(x, y);
-           if (tile) {
-             line += tile.char;
-           } else {
-             line += ' ';
-           }
+            line += ' ';
         }
       }
       lines.push(line);
@@ -63,7 +72,7 @@ Level: ${p.level}
 HP: ${p.stats.hp}/${p.stats.maxHp}
 ATK: ${p.stats.attack}
 DEF: ${p.stats.defense}
-XP: ${p.experience}
+XP: ${p.experience}/${p.nextLevelXp}
 
 Depth: ${this.game.depth}`;
 

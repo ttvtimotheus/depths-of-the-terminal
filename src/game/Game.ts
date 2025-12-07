@@ -8,6 +8,9 @@ import { AiSystem } from '../systems/AiSystem.js';
 import { CombatSystem } from '../systems/CombatSystem.js';
 import { InventorySystem } from '../systems/InventorySystem.js';
 import { Item } from '../entities/Item.js';
+import { TileType } from '../world/Tile.js';
+import { Fov } from '../world/Fov.js';
+import { GameConfig } from '../config/GameConfig.js';
 
 export class Game {
   public map: DungeonMap | null = null;
@@ -30,14 +33,25 @@ export class Game {
     this.mode = GameMode.InDungeon;
     this.turn = 0;
     
-    const { map, startX, startY, entities } = LevelGenerator.generate(60, 20, this.depth);
-    this.map = map;
-    this.player = new Player(startX, startY);
-    this.entities = entities;
+    this.generateLevel();
     
     this.log('Welcome to the Depths of the Terminal!');
+    this.updateFov();
   }
   
+  private generateLevel(): void {
+      const { map, startX, startY, entities } = LevelGenerator.generate(GameConfig.map.width, GameConfig.map.height, this.depth);
+      this.map = map;
+      if (!this.player) {
+          this.player = new Player(startX, startY);
+      } else {
+          this.player.x = startX;
+          this.player.y = startY;
+      }
+      this.entities = entities;
+      this.updateFov();
+  }
+
   public handleInput(cmd: InputCommand): void {
      if (this.mode === GameMode.InDungeon) {
         if (cmd.type === 'move') {
@@ -65,7 +79,10 @@ export class Game {
         }
      } else if (this.mode === GameMode.GameOver) {
          if (cmd.type === 'quit') process.exit(0);
-         if (cmd.type === 'use' || cmd.type === 'wait') this.startNewGame();
+         if (cmd.type === 'use' || cmd.type === 'wait') {
+             this.player = null; // Reset player
+             this.startNewGame();
+         }
      }
   }
   
@@ -118,12 +135,25 @@ export class Game {
            if (target.stats.hp <= 0) {
               this.log(`${target.name} dies!`);
               this.entities = this.entities.filter(e => e !== target);
-              this.player.experience += 10;
+              
+              const leveledUp = this.player.gainXp(10 + (this.depth * 2));
+              if (leveledUp) {
+                  this.log(`Leveled up! You are now level ${this.player.level}.`);
+              }
            }
            this.processTurn();
         } else {
+            // Check if stairs down
+            if (this.map.getTile(newX, newY)?.type === TileType.StairsDown) {
+                this.log('You descend deeper into the dungeon...');
+                this.depth++;
+                this.generateLevel();
+                return;
+            }
+            
            this.player.x = newX;
            this.player.y = newY;
+           this.updateFov();
            this.processTurn();
         }
      }
@@ -139,5 +169,11 @@ export class Game {
          }
      }
      this.turn++;
+  }
+  
+  private updateFov(): void {
+      if (this.player && this.map) {
+          Fov.compute(this.map, this.player.x, this.player.y, GameConfig.fov.radius);
+      }
   }
 }
