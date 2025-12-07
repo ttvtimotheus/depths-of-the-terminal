@@ -1,5 +1,7 @@
 import { DungeonMap } from './Map.js';
 import { Tile, TileType } from './Tile.js';
+import { Monster, MonsterType } from '../entities/Monster.js';
+import { Entity } from '../entities/Entity.js';
 
 interface Room {
   x: number;
@@ -9,7 +11,7 @@ interface Room {
 }
 
 export class LevelGenerator {
-  public static generate(width: number, height: number): { map: DungeonMap, startX: number, startY: number } {
+  public static generate(width: number, height: number, depth: number = 1): { map: DungeonMap, startX: number, startY: number, entities: Entity[] } {
     const map = new DungeonMap(width, height);
     const rooms: Room[] = [];
     const maxRooms = 15;
@@ -68,7 +70,27 @@ export class LevelGenerator {
     const startX = Math.floor(firstRoom.x + firstRoom.w / 2);
     const startY = Math.floor(firstRoom.y + firstRoom.h / 2);
 
-    return { map, startX, startY };
+    // Generate Entities (Monsters)
+    const entities: Entity[] = [];
+    
+    // Skip the first room (spawn room)
+    for (let i = 1; i < rooms.length; i++) {
+        const room = rooms[i];
+        // 50% chance to spawn a monster in a room
+        if (Math.random() < 0.5) {
+           const mx = Math.floor(room.x + room.w / 2);
+           const my = Math.floor(room.y + room.h / 2);
+           
+           // Determine monster type based on depth
+           let type = MonsterType.Goblin;
+           if (depth > 2 && Math.random() < 0.4) type = MonsterType.Orc;
+           if (depth > 5 && Math.random() < 0.2) type = MonsterType.Troll;
+           
+           entities.push(new Monster(mx, my, type));
+        }
+    }
+
+    return { map, startX, startY, entities };
   }
 
   private static intersects(r1: Room, r2: Room): boolean {

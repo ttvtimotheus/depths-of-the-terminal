@@ -4,6 +4,7 @@ import { GameMode } from './GameState.js';
 import { Entity } from '../entities/Entity.js';
 import { LevelGenerator } from '../world/LevelGenerator.js';
 import { InputCommand } from '../input/InputHandler.js';
+import { AiSystem } from '../systems/AiSystem.js';
 
 export class Game {
   public map: DungeonMap | null = null;
@@ -11,22 +12,22 @@ export class Game {
   public entities: Entity[] = [];
   public mode: GameMode = GameMode.MainMenu;
   public depth: number = 1;
+  public turn: number = 0;
+  private aiSystem: AiSystem;
 
   constructor() {
-    // Initialization will happen when starting a new game
+    this.aiSystem = new AiSystem();
   }
 
   public startNewGame(): void {
     this.depth = 1;
     this.mode = GameMode.InDungeon;
+    this.turn = 0;
     
-    // Width and height should fit within the layout map box.
-    // Assuming 75% of terminal width. Typical terminal 80x24 -> 60x19?
-    // Let's go with 60x20 for now.
-    const { map, startX, startY } = LevelGenerator.generate(60, 20);
+    const { map, startX, startY, entities } = LevelGenerator.generate(60, 20, this.depth);
     this.map = map;
     this.player = new Player(startX, startY);
-    this.entities = [];
+    this.entities = entities;
   }
   
   public handleInput(cmd: InputCommand): void {
@@ -49,7 +50,7 @@ export class Game {
         // Check for entity collision (attack)
         const target = this.entities.find(e => e.x === newX && e.y === newY);
         if (target) {
-           // Attack
+           // Attack logic will go here
            // console.log('Attack!');
         } else {
            this.player.x = newX;
@@ -60,6 +61,9 @@ export class Game {
   }
   
   private processTurn(): void {
-     // Move monsters
+     if (this.player && this.map) {
+         this.aiSystem.process(this.player, this.entities, this.map);
+     }
+     this.turn++;
   }
 }
